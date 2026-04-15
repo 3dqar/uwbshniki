@@ -3,7 +3,7 @@
 // Caches static assets for offline use
 // ============================================
 
-const CACHE = 'econ-empire-v1';
+const CACHE = 'econ-empire-v2';
 
 const STATIC = [
   'index.html',
@@ -19,6 +19,10 @@ const STATIC = [
   'assets/js/api.js',
   'assets/js/user.js',
   'assets/js/ui.js',
+  'manifest.json',
+  'assets/icon-192.png',
+  'assets/icon-512.png',
+  'assets/favicon.ico',
 ];
 
 self.addEventListener('install', event => {
