@@ -40,15 +40,21 @@ export function getAllBusinesses() {
 
 // ── SESSION ──────────────────────────────────
 
-const KEY = 'ee_user';
+const KEY     = 'ee_user';
+const OLD_KEY = 'lc_user'; // legacy key — kept for backward compatibility
 
 export function getUser() {
-  try { return JSON.parse(localStorage.getItem(KEY)) || null; }
-  catch { return null; }
+  try {
+    // Prefer new key; fall back to old lc_user key so existing sessions survive
+    const raw = localStorage.getItem(KEY) || localStorage.getItem(OLD_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
 }
 
 export function setUser(data) {
-  localStorage.setItem(KEY, JSON.stringify(data));
+  const json = JSON.stringify(data);
+  localStorage.setItem(KEY,     json); // write new key
+  localStorage.setItem(OLD_KEY, json); // keep old key in sync
 }
 
 export function saveUser(data) {
@@ -58,15 +64,16 @@ export function saveUser(data) {
 
 export function clearUser() {
   localStorage.removeItem(KEY);
+  localStorage.removeItem(OLD_KEY);
 }
 
 export function requireAuth() {
-  if (!getUser()) { window.location.href = '/login.html'; }
+  if (!getUser()) { window.location.href = 'login.html'; }  // relative path
 }
 
 export function requireAdmin() {
   const u = getUser();
-  if (!u || u.role !== 'admin') { window.location.href = '/app.html'; }
+  if (!u || u.role !== 'admin') { window.location.href = 'app.html'; }  // relative path
 }
 
 // ── PASSIVE INCOME TICK ───────────────────────
