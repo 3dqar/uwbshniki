@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Akademija — Econ Empire</title>
+  <link rel="stylesheet" href="assets/css/app.css"/>
+  <style>
+    /* ── STATS BAR ── */
+    .academy-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .acs { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 10px; text-align: center; }
+    .acs-val   { font-size: 20px; font-weight: 800; font-family: var(--font-mono); }
+    .acs-label { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); margin-top: 3px; }
+    .acs--xp   { border-color: rgba(123,79,255,0.25); } .acs--xp .acs-val { color: var(--purple-2); }
+    .acs--str  { border-color: rgba(245,200,66,0.25); } .acs--str .acs-val { color: var(--gold); }
+    .acs--rank { border-color: rgba(0,212,170,0.25); }  .acs--rank .acs-val { font-size: 13px; color: var(--teal); }
+
+    /* ── QUESTION CARD ── */
+    .q-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 24px 20px; margin-bottom: 16px; }
+    .q-category { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .q-category-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+    .q-text { font-size: 17px; font-weight: 700; line-height: 1.55; margin-bottom: 6px; }
+    .q-scenario { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-bottom: 20px; padding: 12px 14px; background: var(--bg-2); border-radius: var(--r-sm); border-left: 2px solid var(--border-gold); }
+
+    /* ── ANSWERS ── */
+    .answers { display: flex; flex-direction: column; gap: 10px; }
+    .ans-btn { background: var(--bg-2); border: 1.5px solid var(--border); border-radius: var(--r-md); padding: 16px 16px; font-size: 13px; font-weight: 600; color: var(--text); text-align: left; cursor: pointer; font-family: var(--font-ui); transition: all 0.2s; display: flex; align-items: center; gap: 12px; line-height: 1.4; }
+    .ans-btn:hover { border-color: var(--border-2); transform: translateX(3px); }
+    .ans-btn.correct { border-color: var(--teal); background: var(--teal-dim); color: var(--teal); }
+    .ans-btn.wrong   { border-color: var(--red);  background: var(--red-dim);  color: var(--red); }
+    .ans-btn:disabled { cursor: default; transform: none; }
+    .ans-icon { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; font-family: var(--font-mono); flex-shrink: 0; color: var(--text-3); }
+    .ans-btn.correct .ans-icon { background: rgba(0,212,170,0.2); color: var(--teal); }
+    .ans-btn.wrong   .ans-icon { background: rgba(255,77,106,0.2); color: var(--red); }
+
+    /* ── RESULT ── */
+    .q-result { display: none; text-align: center; padding: 20px 0 4px; }
+    .q-result.visible { display: block; animation: bounce-in 0.4s ease; }
+    .q-result-emoji { font-size: 40px; margin-bottom: 8px; }
+    .q-result-text  { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .q-result-xp    { font-size: 20px; font-weight: 800; font-family: var(--font-mono); color: var(--purple-2); }
+    .q-result-explain { font-size: 12px; color: var(--text-2); line-height: 1.5; margin-top: 10px; max-width: 320px; margin-left: auto; margin-right: auto; }
+    .q-next-btn { margin-top: 16px; padding: 14px 32px; border-radius: var(--r-md); background: linear-gradient(135deg, var(--purple) 0%, var(--purple-2) 100%); color: white; font-size: 14px; font-weight: 800; border: none; cursor: pointer; font-family: var(--font-ui); box-shadow: 0 4px 20px rgba(123,79,255,0.3); transition: box-shadow 0.2s, transform 0.15s; }
+    .q-next-btn:hover  { box-shadow: 0 8px 32px rgba(123,79,255,0.45); }
+    .q-next-btn:active { transform: scale(0.97); }
+
+    /* ── STREAK ── */
+    .streak-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .streak-label { font-size: 12px; font-weight: 700; color: var(--text-2); }
+    .streak-flames { display: flex; gap: 4px; }
+    .flame { font-size: 16px; opacity: 0.25; transition: opacity 0.3s, transform 0.3s; }
+    .flame.active { opacity: 1; transform: scale(1.2); }
+    .streak-combo { margin-left: auto; font-size: 11px; font-weight: 700; font-family: var(--font-mono); color: var(--orange); }
+    .combo-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--orange-dim); border: 1px solid rgba(255,140,66,0.25); padding: 4px 10px; border-radius: 100px; }
+  </style>
+</head>
+<body>
+  <div id="toast-container"></div>
+  <div class="app-root">
+    <header class="top-bar">
+      <span class="top-bar__logo">Akademija</span>
+      <a href="profile.html" class="top-bar__action"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></a>
+    </header>
+    <main class="page-content">
+      <div class="academy-stats">
+        <div class="acs acs--xp"><div class="acs-val" id="stat-xp">0</div><div class="acs-label">Žinios</div></div>
+        <div class="acs acs--str"><div class="acs-val" id="stat-streak">0🔥</div><div class="acs-label">Serija</div></div>
+        <div class="acs acs--rank"><div class="acs-val" id="stat-rank">Studentas</div><div class="acs-label">Rangas</div></div>
+      </div>
+
+      <div class="streak-bar">
+        <span class="streak-label">Serija</span>
+        <div class="streak-flames" id="streak-flames">
+          <span class="flame">🔥</span><span class="flame">🔥</span><span class="flame">🔥</span><span class="flame">🔥</span><span class="flame">🔥</span>
+        </div>
+        <div class="streak-combo" id="combo-badge" style="display:none;">
+          <div class="combo-badge">⚡ x<span id="combo-x">1</span> bonusas</div>
+        </div>
+      </div>
+
+      <div class="q-card" id="q-card">
+        <div id="q-content"></div>
+      </div>
+    </main>
+    <nav class="bottom-nav">
+      <a class="nav-item" data-page="app" href="app.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+      <a class="nav-item" data-page="empire" href="empire.html"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-4h6v4"/></svg>Imperija</a>
+      <a class="nav-item" data-page="market" href="market.html"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Rinka</a>
+      <a class="nav-item active" data-page="academy" href="academy.html"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Akademija</a>
+      <a class="nav-item" data-page="leaderboard" href="leaderboard.html"><svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>Top</a>
+    </nav>
+  </div>
+  <script type="module">
+    import { getUser, requireAuth, saveUser, getLevelInfo, calcLevel } from './assets/js/user.js';
+    import { toast, fmt } from './assets/js/ui.js';
+    import api from './assets/js/api.js';
+
+    requireAuth();
+
+    const QUESTIONS = [
+      { cat: 'Makroekonomika', q: 'Kas nutinka, kai centriniai bankai kelia palūkanų normas?', scenario: 'FED padidino palūkanas 0.5%. Rinkose nerimas — investuotojai perorientuojasi.', answers: ['Pasiskolinti pigiau', 'Infliacija stabdoma, skolinimasis brangsta', 'Akcinės rinkos visada auga', 'Valiuta susilpnėja'], correct: 1, explain: 'Aukštesnės palūkanos brangina kreditą ir stabdo infliaciją, bet lėtina ekonomiką.' },
+      { cat: 'Verslo strategija', q: 'Kas yra "skalės ekonomija"?', scenario: 'Jūsų gamykla pagamina 1000 vienetų už €10 vnt. Padvigubinus gamybą, kaina krenta.', answers: ['Mokesčių optimizavimas', 'Gamybos augimas mažina vieneto kainą', 'Rinkų išplėtimas į užsienį', 'Automatizacijos technologijos'], correct: 1, explain: 'Skalės ekonomija: didinant gamybos apimtis, vieneto kaštai mažėja dėl fiksuotų kaštų paskirstymo.' },
+      { cat: 'Rinkodara', q: 'Kuris kainų nustatymo metodas grindžiamas vertės suvokimu?', scenario: 'Jūsų klientai moka 3x daugiau už "premium" produktą, nors gamybos kaina tokia pati.', answers: ['Kaštų pliuso metodas', 'Konkurentų sekimas', 'Vertės pagrindu kainodara', 'Dumping kainodara'], correct: 2, explain: 'Vertės pagrindu kainodara remiasi tuo, kiek klientas suvokia produkto vertę, o ne gamybos kaina.' },
+      { cat: 'Investavimas', q: 'Ką reiškia "diversifikacija" portfelyje?', scenario: 'Jūsų draugas investavo viską į vieną akciją. Ji krito 80%. Ką turėjote padaryti kitaip?', answers: ['Investuoti tik į auksą', 'Paskirstyti investicijas į skirtingus aktyvus', 'Visus pinigus laikyti banke', 'Sekti populiarius YouTuberius'], correct: 1, explain: 'Diversifikacija sumažina riziką paskirstant investicijas tarp skirtingų tipų aktyvų.' },
+      { cat: 'Finansai', q: 'Kas yra "pinigų srautų valdymas" (cash flow)?', scenario: 'Jūsų verslas pelningas, bet negali sumokėti sąskaitų. Klientai moka po 90 dienų.', answers: ['Pelno maksimizavimas', 'Pinigų įplaukų ir išplaukų balansavimas', 'Bankroto proceso valdymas', 'Akcijų pirkimas'], correct: 1, explain: 'Cash flow valdymas užtikrina, kad įmonė turi pakankamai pinigų einamiems įsipareigojimams vykdyti.' },
+      { cat: 'Makroekonomika', q: 'Kas yra BVP (Bendras vidaus produktas)?', scenario: 'Vyriausybė skelbia: "BVP augo 3%." Ką tai reiškia jūsų verslui?', answers: ['Tik eksporto vertė', 'Bendra prekių ir paslaugų vertė šalyje per metus', 'Valdžios biudžeto surinkimas', 'Importo ir eksporto skirtumas'], correct: 1, explain: 'BVP matuoja visos šalies ekonominės veiklos apimtį — kuo didesnė, tuo daugiau vartotojai perka.' },
+      { cat: 'Verslo modeliai', q: 'Koks verslo modelis generuoja pasikartojančias pajamas?', scenario: 'Netflix, Spotify, SaaS produktai — jie visi turi bendrą ypatybę.', answers: ['Vienkartiniai pardavimai', 'Prenumeratos modelis', 'Aukciono sistema', 'Nemokamas produktas'], correct: 1, explain: 'Prenumeratos modelis generuoja stabilias mėnesines/metines pajamas ir didina verslo vertę.' },
+      { cat: 'Rinkodara', q: 'Kas yra "klientų išlaikymo kaina" mažesnė nei?', scenario: 'Studijose: išlaikyti esamą klientą kainuoja 5–7x mažiau nei pritraukti naują.', answers: ['Naujo kliento pritraukimo kaina', 'Gamybos kaina', 'Reklamos biudžetas', 'Darbuotojų atlygis'], correct: 0, explain: 'Esamo kliento išlaikymas kainuoja daug mažiau nei naujo pritraukimas — todėl CRM yra labai svarbus.' },
+    ];
+
+    const RANKS = ['Studentas', 'Finansų Analitikas', 'Verslo Konsultantas', 'Ekonomistas', 'Rinkos Ekspertas', 'Imperijos Strategas'];
+
+    let streak = 0;
+    let qIdx   = 0;
+    let shuffled = [...QUESTIONS].sort(() => Math.random() - 0.5);
+
+    function getRank(xp) {
+      const i = Math.min(Math.floor(xp / 300), RANKS.length - 1);
+      return RANKS[i];
+    }
+
+    function updateStats() {
+      const u = getUser();
+      document.getElementById('stat-xp').textContent     = fmt(u.xp || 0);
+      document.getElementById('stat-streak').textContent = streak + '🔥';
+      document.getElementById('stat-rank').textContent   = getRank(u.xp || 0);
+      const flames = document.querySelectorAll('.flame');
+      flames.forEach((f, i) => f.classList.toggle('active', i < Math.min(streak, 5)));
+      if (streak >= 2) {
+        document.getElementById('combo-badge').style.display = '';
+        document.getElementById('combo-x').textContent = streak;
+      } else { document.getElementById('combo-badge').style.display = 'none'; }
+    }
+
+    function renderQuestion() {
+      const q = shuffled[qIdx % shuffled.length];
+      const icons = ['A', 'B', 'C', 'D'];
+      document.getElementById('q-content').innerHTML = `
+        <div class="q-category"><div class="q-category-dot"></div>${q.cat}</div>
+        <div class="q-text">${q.q}</div>
+        ${q.scenario ? `<div class="q-scenario">${q.scenario}</div>` : ''}
+        <div class="answers">
+          ${q.answers.map((a, i) => `
+            <button class="ans-btn" data-i="${i}">
+              <div class="ans-icon">${icons[i]}</div>
+              <span>${a}</span>
+            </button>`).join('')}
+        </div>
+        <div class="q-result" id="q-result">
+          <div class="q-result-emoji" id="res-emoji">🎉</div>
+          <div class="q-result-text" id="res-text"></div>
+          <div class="q-result-xp" id="res-xp"></div>
+          <div class="q-result-explain">${q.explain}</div>
+          <button class="q-next-btn" id="next-q-btn">Kitas klausimas →</button>
+        </div>`;
+
+      document.querySelectorAll('.ans-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const chosen  = +btn.dataset.i;
+          const correct = chosen === q.correct;
+          document.querySelectorAll('.ans-btn').forEach(b => {
+            b.disabled = true;
+            if (+b.dataset.i === q.correct) b.classList.add('correct');
+            if (+b.dataset.i === chosen && !correct) b.classList.add('wrong');
+          });
+
+          if (correct) { streak++; } else { streak = Math.max(0, streak - 1); }
+          const bonus = correct ? Math.max(1, streak) : 0;
+          const xpGain = correct ? 20 * bonus : 0;
+
+          const u = getUser();
+          const newXp = (u.xp || 0) + xpGain;
+          saveUser({ xp: newXp });
+          const info = getLevelInfo(newXp);
+          await api.update(u.username, u.coins || 0, newXp, info.level);
+
+          const res = document.getElementById('q-result');
+          document.getElementById('res-emoji').textContent = correct ? (streak >= 3 ? '🔥' : '✅') : '❌';
+          document.getElementById('res-text').textContent  = correct ? (streak >= 3 ? `SERIJA x${streak}! Puiku!` : 'Teisingai!') : 'Neteisingai';
+          document.getElementById('res-xp').textContent   = correct ? `+${xpGain} Žinių` : '−0 Žinių';
+          document.getElementById('res-xp').style.color   = correct ? 'var(--purple-2)' : 'var(--red)';
+          res.classList.add('visible');
+          updateStats();
+          if (correct) toast(`+${xpGain} Žinių! ${streak >= 3 ? '🔥 SERIJA!' : ''}`, 'success');
+          else toast('Neteisingas atsakymas', 'error');
+
+          document.getElementById('next-q-btn').addEventListener('click', () => {
+            qIdx++;
+            if (qIdx % shuffled.length === 0) shuffled = [...QUESTIONS].sort(() => Math.random() - 0.5);
+            renderQuestion();
+          });
+        });
+      });
+    }
+
+    updateStats();
+    renderQuestion();
+  </script>
+</body>
+</html>

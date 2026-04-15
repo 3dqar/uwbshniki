@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Econ Empire — Prisijungimas</title>
+  <link rel="stylesheet" href="assets/css/app.css"/>
+  <style>
+    .auth-page { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px max(32px, env(safe-area-inset-bottom)); max-width: var(--max-w); margin: 0 auto; position: relative; z-index: 1; }
+    body::after { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(245,200,66,0.07) 0%, transparent 60%), radial-gradient(ellipse 40% 40% at 0% 100%, rgba(123,79,255,0.08) 0%, transparent 55%); pointer-events: none; z-index: 0; }
+    .auth-logo-area { text-align: center; margin-bottom: 32px; opacity: 0; animation: fade-up 0.45s 0.05s ease forwards; }
+    .auth-crown { width: 40px; height: 40px; margin: 0 auto 12px; filter: drop-shadow(0 0 14px rgba(245,200,66,0.35)); }
+    .auth-title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; background: linear-gradient(135deg, var(--gold) 0%, #fff8d6 55%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 4px; }
+    .auth-brand-sub { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-3); }
+    .auth-brand-sub span { color: var(--gold); opacity: 0.7; }
+    .auth-card { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 28px 24px 24px; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); opacity: 0; animation: fade-up 0.5s 0.18s ease forwards; }
+    .auth-tabs { display: flex; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 4px; margin-bottom: 26px; position: relative; }
+    .auth-tab { flex: 1; padding: 11px 8px; border-radius: calc(var(--r-lg) - 3px); font-size: 13px; font-weight: 700; letter-spacing: 0.04em; color: var(--text-3); text-align: center; cursor: pointer; transition: color 0.22s; position: relative; z-index: 2; user-select: none; }
+    .auth-tab-slider { position: absolute; top: 4px; left: 4px; width: calc(50% - 4px); height: calc(100% - 8px); background: var(--surface-2); border: 1px solid var(--border-2); border-radius: calc(var(--r-lg) - 3px); transition: transform 0.28s cubic-bezier(0.34, 1.1, 0.64, 1); z-index: 1; }
+    .auth-tabs.show-register .auth-tab-slider { transform: translateX(calc(100%)); }
+    .auth-tabs.show-register .auth-tab[data-tab="register"], .auth-tabs:not(.show-register) .auth-tab[data-tab="login"] { color: var(--text); }
+    .auth-form { display: flex; flex-direction: column; gap: 16px; }
+    .auth-form.hidden { display: none; }
+    .auth-submit { background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%); color: #08060a; font-size: 14px; font-weight: 800; letter-spacing: 0.05em; padding: 16px 24px; border-radius: var(--r-md); width: 100%; border: none; cursor: pointer; font-family: var(--font-ui); box-shadow: var(--shadow-gold); transition: box-shadow 0.2s, transform 0.15s, opacity 0.2s; position: relative; overflow: hidden; margin-top: 6px; }
+    .auth-submit::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.16) 0%, transparent 50%); pointer-events: none; }
+    .auth-submit:hover { box-shadow: 0 8px 32px rgba(245,200,66,0.4); }
+    .auth-submit:active { transform: scale(0.97); }
+    .auth-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .auth-msg { padding: 12px 14px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; display: none; align-items: center; gap: 8px; line-height: 1.4; margin-bottom: 4px; }
+    .auth-msg.visible { display: flex; }
+    .auth-msg.error   { background: rgba(255,77,106,0.1);  border: 1px solid rgba(255,77,106,0.3);  color: #ff8099; }
+    .auth-msg.success { background: rgba(0,212,170,0.08);  border: 1px solid rgba(0,212,170,0.3);  color: var(--teal); }
+    .auth-footer { text-align: center; margin-top: 24px; font-size: 11px; color: var(--text-3); opacity: 0; animation: fade-up 0.5s 0.32s ease forwards; }
+    .auth-footer a { color: var(--gold); opacity: 0.75; } .auth-footer a:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div id="toast-container"></div>
+  <div class="auth-page">
+    <div class="auth-logo-area">
+      <svg class="auth-crown" viewBox="0 0 52 52" fill="none">
+        <path d="M6 38L10 20L19 30L26 10L33 30L42 20L46 38H6Z" fill="none" stroke="#F5C842" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="10" cy="20" r="2.5" fill="#F5C842"/>
+        <circle cx="26" cy="10" r="2.5" fill="#F5C842"/>
+        <circle cx="42" cy="20" r="2.5" fill="#F5C842"/>
+        <rect x="6" y="39" width="40" height="4" rx="2" fill="#F5C842" opacity="0.6"/>
+      </svg>
+      <div class="auth-title">Econ Empire</div>
+      <div class="auth-brand-sub"><span>UWB'SHNIKI</span> pristato</div>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tabs" id="auth-tabs">
+        <div class="auth-tab-slider"></div>
+        <div class="auth-tab" data-tab="login">Prisijungti</div>
+        <div class="auth-tab" data-tab="register">Registracija</div>
+      </div>
+      <div class="auth-msg" id="auth-msg">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="7"/><path d="M8 5v3M8 11h.01"/></svg>
+        <span id="auth-msg-text"></span>
+      </div>
+      <form class="auth-form" id="form-login">
+        <div class="input-group">
+          <label class="input-label" for="login-username">Vartotojo vardas</label>
+          <input class="input-field" id="login-username" type="text" placeholder="vartotojas" autocomplete="username" required/>
+        </div>
+        <div class="input-group">
+          <label class="input-label" for="login-password">Slaptažodis</label>
+          <input class="input-field" id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" required/>
+        </div>
+        <button class="auth-submit" type="submit" id="btn-login">Prisijungti</button>
+      </form>
+      <form class="auth-form hidden" id="form-register">
+        <div class="input-group">
+          <label class="input-label" for="reg-username">Vartotojo vardas</label>
+          <input class="input-field" id="reg-username" type="text" placeholder="pasirink_varda" autocomplete="username" required minlength="3"/>
+        </div>
+        <div class="input-group">
+          <label class="input-label" for="reg-password">Slaptažodis</label>
+          <input class="input-field" id="reg-password" type="password" placeholder="Min. 8 simboliai" autocomplete="new-password" required minlength="8"/>
+        </div>
+        <button class="auth-submit" type="submit" id="btn-register">Sukurti paskyrą</button>
+      </form>
+    </div>
+    <div class="auth-footer">
+      <a href="index.html">← Į pradžią</a> &nbsp;·&nbsp; Econ Empire © 2025
+    </div>
+  </div>
+  <script type="module">
+    import api from './assets/js/api.js';
+    import { setUser } from './assets/js/user.js';
+
+    const tabs      = document.getElementById('auth-tabs');
+    const msgBox    = document.getElementById('auth-msg');
+    const msgText   = document.getElementById('auth-msg-text');
+    const formLogin = document.getElementById('form-login');
+    const formReg   = document.getElementById('form-register');
+
+    function showMsg(type, text) { msgBox.className = 'auth-msg visible ' + type; msgText.textContent = text; }
+    function clearMsg()          { msgBox.className = 'auth-msg'; }
+
+    function switchTab(tab) {
+      clearMsg();
+      tabs.classList.toggle('show-register', tab === 'register');
+      formLogin.classList.toggle('hidden', tab === 'register');
+      formReg.classList.toggle('hidden', tab !== 'register');
+    }
+
+    tabs.addEventListener('click', e => { const t = e.target.closest('[data-tab]'); if (t) switchTab(t.dataset.tab); });
+
+    const params = new URLSearchParams(location.search);
+    if (params.get('tab') === 'register') switchTab('register');
+
+    formLogin.addEventListener('submit', async e => {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+      if (!username || !password) { showMsg('error', 'Užpildykite visus laukus.'); return; }
+      const btn = document.getElementById('btn-login');
+      btn.disabled = true; btn.textContent = 'Jungiamasi…';
+      const res = await api.login(username, password);
+      if (res && res.success) {
+        setUser(res.user || { username, coins: res.coins || 0, xp: res.xp || 0, level: res.level || 1 });
+        showMsg('success', 'Sveiki sugrįžę!');
+        setTimeout(() => window.location.href = 'app.html', 600);
+      } else {
+        showMsg('error', res?.error || 'Neteisingas vardas arba slaptažodis.');
+        btn.disabled = false; btn.textContent = 'Prisijungti';
+      }
+    });
+
+    formReg.addEventListener('submit', async e => {
+      e.preventDefault();
+      const username = document.getElementById('reg-username').value.trim();
+      const password = document.getElementById('reg-password').value;
+      if (username.length < 3) { showMsg('error', 'Vardas turi būti bent 3 simboliai.'); return; }
+      if (password.length < 8) { showMsg('error', 'Slaptažodis turi būti bent 8 simboliai.'); return; }
+      const btn = document.getElementById('btn-register');
+      btn.disabled = true; btn.textContent = 'Kuriama…';
+      const res = await api.register(username, password);
+      if (res && res.success) {
+        setUser(res.user || { username, coins: 0, xp: 0, level: 1 });
+        showMsg('success', 'Paskyra sukurta! Perkeliama…');
+        setTimeout(() => window.location.href = 'app.html', 700);
+      } else {
+        showMsg('error', res?.error || 'Registracija nepavyko. Bandykite dar kartą.');
+        btn.disabled = false; btn.textContent = 'Sukurti paskyrą';
+      }
+    });
+  </script>
+</body>
+</html>

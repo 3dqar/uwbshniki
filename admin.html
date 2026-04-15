@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Admin — Econ Empire</title>
+  <link rel="stylesheet" href="assets/css/app.css"/>
+  <style>
+    .admin-gate { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px; max-width: var(--max-w); margin: 0 auto; }
+    .admin-gate-card { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 32px 24px; }
+    .admin-gate-icon  { font-size: 40px; text-align: center; margin-bottom: 12px; }
+    .admin-gate-title { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 4px; }
+    .admin-gate-sub   { font-size: 13px; color: var(--text-3); text-align: center; margin-bottom: 24px; }
+
+    .admin-root { max-width: var(--max-w); margin: 0 auto; }
+    .admin-overview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .ov-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 14px 12px; text-align: center; }
+    .ov-val  { font-size: 22px; font-weight: 800; font-family: var(--font-mono); }
+    .ov-label{ font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); margin-top: 3px; }
+    .ov-card:nth-child(1) .ov-val { color: var(--gold); }
+    .ov-card:nth-child(2) .ov-val { color: var(--teal); }
+    .ov-card:nth-child(3) .ov-val { color: var(--purple-2); }
+
+    .user-table { display: flex; flex-direction: column; gap: 10px; }
+    .user-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+    .user-row-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; }
+    .user-row-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: var(--text-2); text-transform: uppercase; flex-shrink: 0; }
+    .user-row-name  { font-size: 14px; font-weight: 700; flex: 1; }
+    .user-row-coins { font-size: 12px; font-family: var(--font-mono); color: var(--gold); }
+    .user-row-expand { font-size: 18px; color: var(--text-3); transition: transform 0.2s; }
+    .user-row.open .user-row-expand { transform: rotate(180deg); }
+    .user-row-detail { display: none; padding: 0 16px 16px; border-top: 1px solid var(--border); }
+    .user-row.open .user-row-detail { display: block; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .detail-input { background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 12px; font-size: 13px; color: var(--text); outline: none; width: 100%; font-family: var(--font-ui); }
+    .detail-input:focus { border-color: rgba(245,200,66,0.4); }
+    .detail-label { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 4px; display: block; }
+    .detail-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .save-btn   { flex: 1; padding: 11px; border-radius: var(--r-sm); background: var(--gold-dim); border: 1px solid var(--border-gold); color: var(--gold); font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font-ui); transition: background 0.2s; }
+    .save-btn:hover { background: rgba(245,200,66,0.2); }
+    .delete-btn { padding: 11px 16px; border-radius: var(--r-sm); background: var(--red-dim); border: 1px solid rgba(255,77,106,0.25); color: var(--red); font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font-ui); transition: background 0.2s; }
+    .delete-btn:hover { background: rgba(255,77,106,0.25); }
+
+    .admin-loading { text-align: center; padding: 48px 20px; color: var(--text-3); }
+    .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+    .refresh-btn { padding: 10px 20px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--border-2); color: var(--text-2); font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font-ui); transition: background 0.2s; }
+    .refresh-btn:hover { background: var(--surface-3); }
+  </style>
+</head>
+<body>
+  <div id="toast-container"></div>
+
+  <!-- Gate -->
+  <div class="admin-gate" id="gate">
+    <div class="admin-gate-card">
+      <div class="admin-gate-icon">🔐</div>
+      <div class="admin-gate-title">Admin zona</div>
+      <div class="admin-gate-sub">Įveskite admin slaptažodį</div>
+      <div class="input-group" style="margin-bottom:16px;">
+        <input class="input-field" id="admin-pw-input" type="password" placeholder="Admin slaptažodis" autocomplete="current-password"/>
+      </div>
+      <button class="btn btn--primary btn--full" id="admin-pw-btn">Prisijungti</button>
+    </div>
+  </div>
+
+  <!-- Admin panel (hidden until auth) -->
+  <div id="admin-panel" style="display:none;">
+    <div class="app-root">
+      <header class="top-bar">
+        <span class="top-bar__logo">⚙️ Admin</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="refresh-btn" id="refresh-btn">↻ Atnaujinti</button>
+          <a href="app.html" class="top-bar__action"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg></a>
+        </div>
+      </header>
+      <main class="page-content admin-root">
+        <div class="admin-overview">
+          <div class="ov-card"><div class="ov-val" id="ov-users">0</div><div class="ov-label">Žaidėjai</div></div>
+          <div class="ov-card"><div class="ov-val" id="ov-coins">0</div><div class="ov-label">Kap. Iš viso</div></div>
+          <div class="ov-card"><div class="ov-val" id="ov-xp">0</div><div class="ov-label">XP Iš viso</div></div>
+        </div>
+        <p class="section-label mb-12">Žaidėjai</p>
+        <div id="user-table">
+          <div class="admin-loading"><div class="spinner"></div>Kraunama…</div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import api from './assets/js/api.js';
+    import { fmt } from './assets/js/ui.js';
+    import { toast } from './assets/js/ui.js';
+
+    let adminPw = '';
+
+    document.getElementById('admin-pw-btn').addEventListener('click', async () => {
+      const pw = document.getElementById('admin-pw-input').value.trim();
+      if (!pw) return;
+      adminPw = pw;
+      const res = await api.getAll(pw);
+      if (res && res.success) {
+        document.getElementById('gate').style.display = 'none';
+        document.getElementById('admin-panel').style.display = '';
+        renderUsers(res.data || []);
+      } else {
+        document.getElementById('admin-pw-input').style.borderColor = 'rgba(255,77,106,0.5)';
+        setTimeout(() => document.getElementById('admin-pw-input').style.borderColor = '', 1000);
+      }
+    });
+
+    document.getElementById('admin-pw-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('admin-pw-btn').click();
+    });
+
+    document.getElementById('refresh-btn').addEventListener('click', async () => {
+      document.getElementById('user-table').innerHTML = '<div class="admin-loading"><div class="spinner"></div>Kraunama…</div>';
+      const res = await api.getAll(adminPw);
+      if (res && res.success) renderUsers(res.data || []);
+    });
+
+    function renderUsers(users) {
+      users.sort((a,b) => (b.coins||0)-(a.coins||0));
+      const totalCoins = users.reduce((s,u) => s+(u.coins||0),0);
+      const totalXp    = users.reduce((s,u) => s+(u.xp||0),0);
+      document.getElementById('ov-users').textContent = users.length;
+      document.getElementById('ov-coins').textContent = fmt(totalCoins);
+      document.getElementById('ov-xp').textContent    = fmt(totalXp);
+
+      const table = document.getElementById('user-table');
+      if (!users.length) { table.innerHTML = '<div class="admin-loading">Nėra žaidėjų</div>'; return; }
+
+      table.innerHTML = '';
+      users.forEach(u => {
+        const row = document.createElement('div');
+        row.className = 'user-row';
+        row.innerHTML = `
+          <div class="user-row-header">
+            <div class="user-row-avatar">${u.username[0]}</div>
+            <div class="user-row-name">${u.username}</div>
+            <div class="user-row-coins">€${fmt(u.coins||0)}</div>
+            <div class="user-row-expand">▾</div>
+          </div>
+          <div class="user-row-detail">
+            <div class="detail-grid">
+              <div><label class="detail-label">Vartotojo vardas</label><input class="detail-input" data-field="username" value="${u.username}"/></div>
+              <div><label class="detail-label">Slaptažodis</label><input class="detail-input" type="password" data-field="password" placeholder="(nekeisti)"/></div>
+              <div><label class="detail-label">Kapitalas</label><input class="detail-input" type="number" data-field="coins" value="${u.coins||0}"/></div>
+              <div><label class="detail-label">Žinios (XP)</label><input class="detail-input" type="number" data-field="xp" value="${u.xp||0}"/></div>
+              <div><label class="detail-label">Lygis</label><input class="detail-input" type="number" data-field="level" value="${u.level||1}"/></div>
+            </div>
+            <div class="detail-actions">
+              <button class="save-btn" data-orig="${u.username}">💾 Išsaugoti</button>
+              <button class="delete-btn" data-username="${u.username}">🗑 Ištrinti</button>
+            </div>
+          </div>`;
+
+        row.querySelector('.user-row-header').addEventListener('click', () => row.classList.toggle('open'));
+        row.querySelector('.save-btn').addEventListener('click', async e => {
+          const orig = e.target.dataset.orig;
+          const inputs = row.querySelectorAll('.detail-input');
+          const data = { adminPassword: adminPw, origUsername: orig };
+          inputs.forEach(inp => { if (inp.value !== '' && !(inp.type === 'password' && !inp.value)) data[inp.dataset.field] = inp.value; });
+          const res = await api.adminUpdate(data);
+          if (res && res.success) toast('Išsaugota!', 'success');
+          else toast('Klaida išsaugant', 'error');
+        });
+        row.querySelector('.delete-btn').addEventListener('click', async e => {
+          if (!confirm(`Ištrinti ${e.target.dataset.username}?`)) return;
+          const res = await api.deleteUser(e.target.dataset.username);
+          if (res && res.success) { row.remove(); toast('Ištrintas', 'success'); }
+          else toast('Klaida trinant', 'error');
+        });
+
+        table.appendChild(row);
+      });
+    }
+  </script>
+</body>
+</html>

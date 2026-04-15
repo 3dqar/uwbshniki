@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Imperija — Econ Empire</title>
+  <link rel="stylesheet" href="assets/css/app.css"/>
+  <style>
+    .empire-hero { background: linear-gradient(135deg, rgba(245,200,66,0.08) 0%, rgba(245,200,66,0.02) 100%); border: 1px solid var(--border-gold); border-radius: var(--r-xl); padding: 24px 20px; margin-bottom: 20px; text-align: center; position: relative; overflow: hidden; }
+    .empire-hero::before { content: ''; position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 200px; height: 200px; background: radial-gradient(circle, rgba(245,200,66,0.08) 0%, transparent 70%); pointer-events: none; }
+    .empire-emoji { font-size: 52px; margin-bottom: 10px; display: block; animation: bounce-in 0.5s ease; }
+    .empire-biz-name { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .empire-level-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--gold-dim); color: var(--gold); font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 100px; letter-spacing: 0.05em; }
+    .empire-income { margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; font-family: var(--font-mono); font-size: 13px; color: var(--teal); font-weight: 600; }
+
+    /* Progress */
+    .prog-section { margin-bottom: 20px; }
+    .prog-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .prog-label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+    .prog-val   { font-size: 12px; font-weight: 700; font-family: var(--font-mono); color: var(--purple-2); }
+
+    /* Upgrade button */
+    .upgrade-btn { width: 100%; padding: 18px; border-radius: var(--r-lg); background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%); color: #0a0810; font-size: 15px; font-weight: 800; letter-spacing: 0.04em; border: none; cursor: pointer; font-family: var(--font-ui); box-shadow: var(--shadow-gold); transition: box-shadow 0.2s, transform 0.15s; position: relative; overflow: hidden; margin-bottom: 20px; }
+    .upgrade-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 50%); pointer-events: none; }
+    .upgrade-btn:hover { box-shadow: 0 12px 44px rgba(245,200,66,0.42); }
+    .upgrade-btn:active { transform: scale(0.97); }
+    .upgrade-btn:disabled { background: var(--surface-2); color: var(--text-3); box-shadow: none; cursor: not-allowed; }
+    .upgrade-btn .cost-row { font-size: 12px; font-weight: 600; opacity: 0.75; margin-top: 4px; }
+
+    /* Tier ladder */
+    .tier-item { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); margin-bottom: 10px; transition: border-color 0.2s; position: relative; }
+    .tier-item.current { border-color: var(--border-gold); background: var(--gold-glow); }
+    .tier-item.locked  { opacity: 0.45; }
+    .tier-item.unlocked:not(.current) { border-color: rgba(0,212,170,0.2); }
+    .tier-emoji { font-size: 28px; flex-shrink: 0; width: 44px; text-align: center; }
+    .tier-info  { flex: 1; min-width: 0; }
+    .tier-name  { font-size: 14px; font-weight: 800; margin-bottom: 2px; }
+    .tier-income{ font-size: 11px; color: var(--text-3); font-family: var(--font-mono); }
+    .tier-badge { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 100px; white-space: nowrap; }
+    .tier-badge--current  { background: var(--gold-dim); color: var(--gold); }
+    .tier-badge--unlocked { background: var(--teal-dim); color: var(--teal); }
+    .tier-badge--locked   { background: var(--surface-2); color: var(--text-3); }
+    .tier-num { position: absolute; top: 8px; right: 12px; font-size: 10px; font-family: var(--font-mono); color: var(--text-3); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div id="toast-container"></div>
+  <div class="app-root">
+    <header class="top-bar">
+      <span class="top-bar__logo">Imperija</span>
+      <a href="profile.html" class="top-bar__action"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></a>
+    </header>
+    <main class="page-content">
+      <div class="empire-hero" id="empire-hero">
+        <span class="empire-emoji" id="biz-emoji">🛒</span>
+        <div class="empire-biz-name" id="biz-name">Gatvės Kioskas</div>
+        <div class="empire-level-badge">⭐ Lygis <span id="biz-level">1</span></div>
+        <div class="empire-income">⚡ €<span id="biz-income">10</span> / min</div>
+      </div>
+
+      <div class="prog-section">
+        <div class="prog-row">
+          <span class="prog-label">Progresas iki kito verslo</span>
+          <span class="prog-val" id="prog-pct">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-bar__fill progress-bar__fill--gold" id="prog-bar" style="width:0%"></div></div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:6px;" id="prog-sub">Žinios: 0 / 100</div>
+      </div>
+
+      <button class="upgrade-btn" id="upgrade-btn">
+        <div>⬆ Tobulinti Verslą</div>
+        <div class="cost-row" id="upgrade-cost">Kaina: €500 + 100 Žinių</div>
+      </button>
+
+      <p class="section-label mb-12">Verslo kelias</p>
+      <div id="tier-list"></div>
+    </main>
+    <nav class="bottom-nav">
+      <a class="nav-item" data-page="app" href="app.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+      <a class="nav-item active" data-page="empire" href="empire.html"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-4h6v4"/></svg>Imperija</a>
+      <a class="nav-item" data-page="market" href="market.html"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Rinka</a>
+      <a class="nav-item" data-page="academy" href="academy.html"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Akademija</a>
+      <a class="nav-item" data-page="leaderboard" href="leaderboard.html"><svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>Top</a>
+    </nav>
+  </div>
+  <script type="module">
+    import { getUser, requireAuth, getLevelInfo, getAllBusinesses, saveUser, calcLevel } from './assets/js/user.js';
+    import { toast, fmt } from './assets/js/ui.js';
+    import api from './assets/js/api.js';
+
+    requireAuth();
+    const businesses = getAllBusinesses();
+
+    function render() {
+      const u = getUser();
+      const coins = u.coins || 0;
+      const xp    = u.xp    || 0;
+      const info  = getLevelInfo(xp);
+      const biz   = info.business;
+      const next  = info.nextBiz;
+
+      document.getElementById('biz-emoji').textContent  = biz.emoji;
+      document.getElementById('biz-name').textContent   = biz.name;
+      document.getElementById('biz-level').textContent  = info.level;
+      document.getElementById('biz-income').textContent = fmt(biz.income);
+      document.getElementById('prog-pct').textContent   = Math.round(info.progress * 100) + '%';
+      document.getElementById('prog-bar').style.width   = (info.progress * 100) + '%';
+      document.getElementById('prog-sub').textContent   = `Žinios: ${info.current} / ${info.needed}`;
+
+      const btn = document.getElementById('upgrade-btn');
+      if (next) {
+        const canAfford = coins >= next.coinCost && xp >= next.xpCost;
+        btn.disabled = !canAfford;
+        document.getElementById('upgrade-cost').textContent = `Kaina: €${fmt(next.coinCost)} + ${fmt(next.xpCost)} Žinių`;
+        btn.querySelector('div:first-child').textContent = `⬆ Tobulinti → ${next.emoji} ${next.name}`;
+      } else {
+        btn.disabled = true;
+        btn.querySelector('div:first-child').textContent = '👑 Pasiektas aukščiausias lygis!';
+        document.getElementById('upgrade-cost').textContent = '';
+      }
+
+      // Tier list
+      const list = document.getElementById('tier-list');
+      list.innerHTML = '';
+      businesses.forEach(b => {
+        const isCurrent  = b.level === biz.level;
+        const isUnlocked = b.level < biz.level;
+        const isLocked   = b.level > biz.level;
+        const div = document.createElement('div');
+        div.className = `tier-item${isCurrent ? ' current' : isUnlocked ? ' unlocked' : ' locked'}`;
+        div.innerHTML = `
+          <span class="tier-num">#${b.level}</span>
+          <div class="tier-emoji">${b.emoji}</div>
+          <div class="tier-info">
+            <div class="tier-name">${b.name}</div>
+            <div class="tier-income">€${fmt(b.income)} / min pasyviai</div>
+          </div>
+          <span class="tier-badge ${isCurrent ? 'tier-badge--current' : isUnlocked ? 'tier-badge--unlocked' : 'tier-badge--locked'}">
+            ${isCurrent ? 'Dabartinis' : isUnlocked ? '✓ Atrakinta' : '🔒 Užrakinta'}
+          </span>`;
+        list.appendChild(div);
+      });
+    }
+
+    render();
+
+    document.getElementById('upgrade-btn').addEventListener('click', async () => {
+      const u    = getUser();
+      const info = getLevelInfo(u.xp || 0);
+      const next = info.nextBiz;
+      if (!next) return;
+      const newCoins = (u.coins || 0) - next.coinCost;
+      const newXp    = (u.xp    || 0) - next.xpCost;
+      if (newCoins < 0 || newXp < 0) { toast('Nepakanka lėšų!', 'error'); return; }
+
+      // Bump XP to next tier threshold
+      const newXpActual = next.level * 500;
+      saveUser({ coins: newCoins, xp: newXpActual });
+      await api.update(u.username, newCoins, newXpActual, next.level);
+      toast(`🎉 Tobulinta: ${next.emoji} ${next.name}!`, 'success');
+      render();
+      document.getElementById('empire-hero').style.animation = 'none';
+      requestAnimationFrame(() => { document.getElementById('empire-hero').style.animation = ''; });
+    });
+  </script>
+</body>
+</html>

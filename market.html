@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Rinka — Econ Empire</title>
+  <link rel="stylesheet" href="assets/css/app.css"/>
+  <style>
+    /* ── MARKET TABS ── */
+    .market-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 2px; }
+    .market-tab  { flex-shrink: 0; padding: 9px 18px; border-radius: 100px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; border: 1px solid var(--border); color: var(--text-3); cursor: pointer; transition: all 0.2s; background: transparent; }
+    .market-tab.active { background: var(--gold-dim); border-color: var(--border-gold); color: var(--gold); }
+    .market-panel { display: none; } .market-panel.active { display: block; }
+
+    /* ── MARKET PULSE ── */
+    .sector-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .sector-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r-lg); padding: 18px 14px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+    .sector-card:hover  { border-color: var(--border-2); transform: translateY(-2px); }
+    .sector-card.chosen { border-color: var(--gold); background: var(--gold-dim); }
+    .sector-card.won    { border-color: var(--teal); background: var(--teal-dim); animation: bounce-in 0.4s ease; }
+    .sector-card.lost   { border-color: var(--red); background: var(--red-dim); }
+    .sector-emoji { font-size: 30px; margin-bottom: 8px; }
+    .sector-name  { font-size: 13px; font-weight: 700; }
+    .sector-trend { font-size: 11px; font-family: var(--font-mono); margin-top: 4px; }
+
+    .pulse-result { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; text-align: center; margin-top: 12px; display: none; }
+    .pulse-result.visible { display: block; animation: fade-up 0.3s ease; }
+    .pulse-result-big { font-size: 32px; font-weight: 800; font-family: var(--font-mono); margin: 8px 0 4px; }
+    .pulse-result-big.won { color: var(--teal); }
+    .pulse-result-big.lost { color: var(--red); }
+
+    /* ── PRICE MANAGER ── */
+    .price-widget { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 22px 20px; }
+    .price-product { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .price-sub { font-size: 12px; color: var(--text-3); margin-bottom: 20px; }
+    .price-slider-wrap { position: relative; margin-bottom: 20px; }
+    .price-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-3); font-family: var(--font-mono); margin-bottom: 8px; }
+    input[type=range] { width: 100%; -webkit-appearance: none; appearance: none; height: 6px; border-radius: 100px; outline: none; cursor: pointer; background: linear-gradient(90deg, var(--gold) 0%, var(--gold) var(--pct,50%), var(--surface-2) var(--pct,50%), var(--surface-2) 100%); }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 3px rgba(245,200,66,0.25), 0 2px 8px rgba(0,0,0,0.5); transition: box-shadow 0.2s; }
+    input[type=range]::-webkit-slider-thumb:hover { box-shadow: 0 0 0 5px rgba(245,200,66,0.3), 0 2px 12px rgba(0,0,0,0.5); }
+    .price-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .price-metric  { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 10px; text-align: center; }
+    .price-metric-label { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+    .price-metric-val   { font-size: 17px; font-weight: 800; font-family: var(--font-mono); transition: color 0.3s; }
+    .price-sell-btn { width: 100%; margin-top: 16px; padding: 16px; border-radius: var(--r-md); background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%); color: #0a0810; font-size: 14px; font-weight: 800; border: none; cursor: pointer; font-family: var(--font-ui); box-shadow: var(--shadow-gold); transition: box-shadow 0.2s, transform 0.15s; }
+    .price-sell-btn:hover  { box-shadow: 0 10px 36px rgba(245,200,66,0.38); }
+    .price-sell-btn:active { transform: scale(0.97); }
+
+    /* ── CRISIS CARDS ── */
+    .crisis-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 22px 20px; }
+    .crisis-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+    .crisis-icon   { font-size: 36px; flex-shrink: 0; }
+    .crisis-title  { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .crisis-desc   { font-size: 13px; color: var(--text-2); line-height: 1.55; }
+    .crisis-options { display: flex; flex-direction: column; gap: 10px; }
+    .crisis-opt { background: var(--bg-2); border: 1.5px solid var(--border); border-radius: var(--r-md); padding: 16px 16px; cursor: pointer; transition: all 0.22s; display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 600; line-height: 1.4; }
+    .crisis-opt:hover  { border-color: var(--border-2); transform: translateX(3px); }
+    .crisis-opt:active { transform: scale(0.98); }
+    .crisis-opt-icon { font-size: 20px; flex-shrink: 0; }
+    .crisis-result { text-align: center; padding: 20px; display: none; }
+    .crisis-result.visible { display: block; animation: bounce-in 0.4s ease; }
+    .crisis-result-emoji { font-size: 44px; margin-bottom: 10px; }
+    .crisis-result-text  { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .crisis-result-reward { font-size: 20px; font-weight: 800; font-family: var(--font-mono); }
+    .crisis-next-btn { margin-top: 16px; padding: 13px 28px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--border-2); color: var(--text); font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--font-ui); transition: background 0.2s; }
+    .crisis-next-btn:hover { background: var(--surface-3); }
+
+    .cooldown-bar { height: 3px; background: var(--surface-2); border-radius: 100px; margin-top: 12px; overflow: hidden; }
+    .cooldown-fill { height: 100%; background: var(--gold); border-radius: 100px; transition: width 0.1s linear; }
+  </style>
+</head>
+<body>
+  <div id="toast-container"></div>
+  <div class="app-root">
+    <header class="top-bar">
+      <span class="top-bar__logo">Rinka</span>
+      <a href="profile.html" class="top-bar__action"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></a>
+    </header>
+    <main class="page-content">
+      <div class="market-tabs">
+        <button class="market-tab active" data-tab="pulse">📊 Pulsas</button>
+        <button class="market-tab" data-tab="price">💰 Kainodara</button>
+        <button class="market-tab" data-tab="crisis">⚡ Krizės</button>
+      </div>
+
+      <!-- PULSE -->
+      <div class="market-panel active" id="panel-pulse">
+        <p class="section-label mb-12">Kuriam sektoriui prognozuojate augimą?</p>
+        <div class="sector-grid" id="sector-grid"></div>
+        <button class="btn btn--primary btn--full" id="pulse-bet-btn" style="margin-bottom:16px;" disabled>Patvirtinti prognozę</button>
+        <div class="cooldown-bar"><div class="cooldown-fill" id="pulse-cooldown" style="width:0%"></div></div>
+        <div class="pulse-result" id="pulse-result">
+          <div id="pulse-result-label" style="font-size:13px;color:var(--text-3);">Rezultatas</div>
+          <div class="pulse-result-big" id="pulse-result-val">+€0</div>
+          <div style="font-size:13px;color:var(--text-2);" id="pulse-result-msg"></div>
+        </div>
+      </div>
+
+      <!-- PRICE MANAGER -->
+      <div class="market-panel" id="panel-price">
+        <div class="price-widget">
+          <div class="price-product" id="price-product">☕ Kavinė</div>
+          <div class="price-sub" id="price-sub">Nustatykite optimalią kainą</div>
+          <div class="price-slider-wrap">
+            <div class="price-labels"><span>Žema €1</span><span id="price-cur-label">€5</span><span>Aukšta €10</span></div>
+            <input type="range" id="price-slider" min="1" max="10" value="5" step="0.5"/>
+          </div>
+          <div class="price-metrics">
+            <div class="price-metric"><div class="price-metric-label">Paklausa</div><div class="price-metric-val" id="pm-demand">80%</div></div>
+            <div class="price-metric"><div class="price-metric-label">Pardavimai</div><div class="price-metric-val" id="pm-sales">40</div></div>
+            <div class="price-metric"><div class="price-metric-label">Pelnas</div><div class="price-metric-val teal" id="pm-profit">€200</div></div>
+          </div>
+          <button class="price-sell-btn" id="price-sell-btn">💰 Parduoti dabar</button>
+        </div>
+      </div>
+
+      <!-- CRISIS CARDS -->
+      <div class="market-panel" id="panel-crisis">
+        <div class="crisis-card" id="crisis-card">
+          <div id="crisis-content"></div>
+        </div>
+      </div>
+    </main>
+    <nav class="bottom-nav">
+      <a class="nav-item" data-page="app" href="app.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+      <a class="nav-item" data-page="empire" href="empire.html"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-4h6v4"/></svg>Imperija</a>
+      <a class="nav-item active" data-page="market" href="market.html"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Rinka</a>
+      <a class="nav-item" data-page="academy" href="academy.html"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Akademija</a>
+      <a class="nav-item" data-page="leaderboard" href="leaderboard.html"><svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>Top</a>
+    </nav>
+  </div>
+  <script type="module">
+    import { getUser, requireAuth, saveUser, getLevelInfo } from './assets/js/user.js';
+    import { toast, fmt } from './assets/js/ui.js';
+    import api from './assets/js/api.js';
+
+    requireAuth();
+
+    // ── TABS ──
+    document.querySelectorAll('.market-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.market-tab, .market-panel').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ── 1. MARKET PULSE ──
+    const SECTORS = [
+      { id: 'tech', name: 'Technologijos', emoji: '💻', base: 0.55 },
+      { id: 'food', name: 'Maistas',       emoji: '🍔', base: 0.60 },
+      { id: 'real', name: 'Nekilnojamas',  emoji: '🏠', base: 0.45 },
+      { id: 'log',  name: 'Logistika',     emoji: '🚛', base: 0.50 },
+    ];
+
+    let chosenSector = null;
+    let pulseLocked  = false;
+
+    function renderSectors() {
+      const grid = document.getElementById('sector-grid');
+      grid.innerHTML = '';
+      SECTORS.forEach(s => {
+        const d   = document.createElement('div');
+        const pct = (Math.random() * 20 - 5).toFixed(1);
+        d.className = 'sector-card';
+        d.dataset.id = s.id;
+        d.innerHTML = `<div class="sector-emoji">${s.emoji}</div><div class="sector-name">${s.name}</div><div class="sector-trend ${pct > 0 ? 'up' : 'dn'}">${pct > 0 ? '▲' : '▼'} ${Math.abs(pct)}%</div>`;
+        d.addEventListener('click', () => {
+          if (pulseLocked) return;
+          chosenSector = s;
+          document.querySelectorAll('.sector-card').forEach(c => c.classList.remove('chosen'));
+          d.classList.add('chosen');
+          document.getElementById('pulse-bet-btn').disabled = false;
+        });
+        grid.appendChild(d);
+      });
+    }
+    renderSectors();
+
+    document.getElementById('pulse-bet-btn').addEventListener('click', () => {
+      if (!chosenSector || pulseLocked) return;
+      pulseLocked = true;
+      document.getElementById('pulse-bet-btn').disabled = true;
+
+      const won = Math.random() < chosenSector.base;
+      const u   = getUser();
+      const reward = won ? Math.floor(50 + (u.coins || 0) * 0.05) : -Math.floor(20 + (u.coins || 0) * 0.02);
+      const newCoins = Math.max(0, (u.coins || 0) + reward);
+      saveUser({ coins: newCoins });
+
+      const info = getLevelInfo(u.xp || 0);
+      api.update(u.username, newCoins, u.xp || 0, info.level);
+
+      // Show result
+      document.querySelectorAll('.sector-card').forEach(c => {
+        const isWinner = Math.random() < c.dataset.id === chosenSector.id ? chosenSector.base : 0.3;
+        c.classList.add(c.dataset.id === chosenSector.id ? (won ? 'won' : 'lost') : '');
+      });
+
+      const res = document.getElementById('pulse-result');
+      res.classList.add('visible');
+      document.getElementById('pulse-result-val').textContent = (reward >= 0 ? '+' : '') + '€' + fmt(Math.abs(reward));
+      document.getElementById('pulse-result-val').className   = 'pulse-result-big ' + (won ? 'won' : 'lost');
+      document.getElementById('pulse-result-msg').textContent = won ? '🎉 Teisingas spėjimas!' : '😔 Nesisekė šį kartą.';
+      toast(won ? `+€${fmt(reward)} pelnas!` : `−€${fmt(Math.abs(reward))} praradimas`, won ? 'success' : 'error');
+
+      // Cooldown 8s
+      let t = 0;
+      const bar = document.getElementById('pulse-cooldown');
+      const iv = setInterval(() => {
+        t += 100;
+        bar.style.width = (t / 8000 * 100) + '%';
+        if (t >= 8000) {
+          clearInterval(iv);
+          pulseLocked = false;
+          chosenSector = null;
+          bar.style.width = '0%';
+          res.classList.remove('visible');
+          renderSectors();
+        }
+      }, 100);
+    });
+
+    // ── 2. PRICE MANAGER ──
+    const slider = document.getElementById('price-slider');
+    function updatePriceMetrics() {
+      const v = parseFloat(slider.value);
+      const pct = ((v - 1) / 9 * 100).toFixed(0);
+      slider.style.setProperty('--pct', pct + '%');
+      document.getElementById('price-cur-label').textContent = '€' + v.toFixed(1);
+      const demand  = Math.max(5, Math.round(100 - (v - 1) / 9 * 80));
+      const sales   = Math.round(demand * 0.6);
+      const profit  = Math.round(sales * v);
+      const profCol = v < 4 ? 'var(--red)' : v < 7 ? 'var(--gold)' : 'var(--teal)';
+      document.getElementById('pm-demand').textContent = demand + '%';
+      document.getElementById('pm-sales').textContent  = sales;
+      document.getElementById('pm-profit').textContent = '€' + profit;
+      document.getElementById('pm-profit').style.color  = profCol;
+    }
+    slider.addEventListener('input', updatePriceMetrics);
+    updatePriceMetrics();
+
+    document.getElementById('price-sell-btn').addEventListener('click', () => {
+      const v = parseFloat(slider.value);
+      const sales  = Math.round(Math.max(5, Math.round(100 - (v - 1) / 9 * 80)) * 0.6);
+      const profit = Math.round(sales * v);
+      const u = getUser();
+      const newCoins = (u.coins || 0) + profit;
+      saveUser({ coins: newCoins });
+      const info = getLevelInfo(u.xp || 0);
+      api.update(u.username, newCoins, u.xp || 0, info.level);
+      toast(`+€${profit} pardavimų pajamos!`, 'success');
+    });
+
+    // ── 3. CRISIS CARDS ──
+    const CRISES = [
+      { icon: '📈', title: 'Infliacijos šuolis', desc: 'Infliacija pakilo 8%. Jūsų išlaidos auga. Kaip reaguosite?',
+        opts: [{ icon: '💸', text: 'Pakelkite kainas 15%', coins: 200, xp: 20 }, { icon: '✂️', text: 'Sumažinkite išlaidas', coins: 80, xp: 40 }, { icon: '🏦', text: 'Pasiskolinkite ir laukite', coins: -100, xp: 15 }] },
+      { icon: '⚡', title: 'Paklausos bumas', desc: 'Staigus poreikio augimas! Galite išnaudoti momentą.',
+        opts: [{ icon: '🚀', text: 'Maksimaliai didinkite gamybą', coins: 500, xp: 30 }, { icon: '💎', text: 'Parduokite premium paslaugas', coins: 300, xp: 50 }] },
+      { icon: '🏭', title: 'Tiekimo grandinės krizė', desc: 'Žaliavų trūkumas. Gamyba gali sustoti.',
+        opts: [{ icon: '🌍', text: 'Ieškoti alternatyvių tiekėjų', coins: -50, xp: 60 }, { icon: '📦', text: 'Naudoti turimas atsargas', coins: 100, xp: 10 }] },
+      { icon: '💻', title: 'Technologijų revoliucija', desc: 'Konkurentai diegia AI. Turite apsispręsti.',
+        opts: [{ icon: '🤖', text: 'Investuoti į automatizavimą', coins: -200, xp: 100 }, { icon: '👷', text: 'Išlaikyti žmones ir tobulinti juos', coins: 0, xp: 70 }] },
+      { icon: '🌊', title: 'Rinkos korekcija', desc: 'Akcijų rinkos kritimas 15%. Krizė ar galimybė?',
+        opts: [{ icon: '📉', text: 'Išpardavinėti ir saugotis', coins: 50, xp: 5 }, { icon: '📈', text: 'Pirkti kol kaina žema', coins: -300, xp: 80 }] },
+    ];
+
+    let crisisIdx = Math.floor(Math.random() * CRISES.length);
+
+    function renderCrisis() {
+      const c = CRISES[crisisIdx];
+      document.getElementById('crisis-content').innerHTML = `
+        <div class="crisis-header">
+          <div class="crisis-icon">${c.icon}</div>
+          <div><div class="crisis-title">${c.title}</div><div class="crisis-desc">${c.desc}</div></div>
+        </div>
+        <div class="crisis-options">
+          ${c.opts.map((o,i) => `<div class="crisis-opt" data-i="${i}"><span class="crisis-opt-icon">${o.icon}</span><span>${o.text}</span></div>`).join('')}
+        </div>`;
+      document.querySelectorAll('.crisis-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const opt = c.opts[+btn.dataset.i];
+          const u   = getUser();
+          const newCoins = Math.max(0, (u.coins || 0) + opt.coins);
+          const newXp    = (u.xp || 0) + opt.xp;
+          saveUser({ coins: newCoins, xp: newXp });
+          const info = getLevelInfo(newXp);
+          api.update(u.username, newCoins, newXp, info.level);
+
+          const won = opt.coins >= 0;
+          document.getElementById('crisis-content').innerHTML = `
+            <div class="crisis-result visible">
+              <div class="crisis-result-emoji">${won ? '🎉' : '😬'}</div>
+              <div class="crisis-result-text">${opt.text}</div>
+              <div class="crisis-result-reward ${won ? 'teal' : 'dn'}">${opt.coins >= 0 ? '+' : ''}€${fmt(Math.abs(opt.coins))} &nbsp; +${opt.xp} Žinių</div>
+              <button class="crisis-next-btn" id="crisis-next">Kita situacija →</button>
+            </div>`;
+          document.getElementById('crisis-next').addEventListener('click', () => {
+            crisisIdx = (crisisIdx + 1) % CRISES.length;
+            renderCrisis();
+          });
+          toast(won ? `${opt.icon} +€${fmt(Math.abs(opt.coins))} +${opt.xp}xp` : `${opt.icon} −€${fmt(Math.abs(opt.coins))} +${opt.xp}xp`, won ? 'success' : 'error');
+        });
+      });
+    }
+    renderCrisis();
+  </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Lyderiai — Econ Empire</title>
+  <link rel="stylesheet" href="assets/css/app.css"/>
+  <style>
+    .podium { display: flex; align-items: flex-end; justify-content: center; gap: 10px; margin-bottom: 28px; padding: 0 10px; }
+    .podium-item { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; max-width: 120px; }
+    .podium-avatar { border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; text-transform: uppercase; border: 2px solid var(--border); }
+    .podium-1 .podium-avatar { width: 60px; height: 60px; border-color: var(--gold); box-shadow: 0 0 20px rgba(245,200,66,0.35); background: var(--gold-dim); color: var(--gold); font-size: 22px; }
+    .podium-2 .podium-avatar { width: 50px; height: 50px; border-color: #9aa0a8; background: rgba(154,160,168,0.12); color: #9aa0a8; }
+    .podium-3 .podium-avatar { width: 46px; height: 46px; border-color: #cd7f32; background: rgba(205,127,50,0.12); color: #cd7f32; }
+    .podium-name  { font-size: 12px; font-weight: 700; text-align: center; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .podium-coins { font-size: 11px; font-family: var(--font-mono); color: var(--text-3); }
+    .podium-stand { width: 100%; border-radius: var(--r-sm) var(--r-sm) 0 0; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .podium-1 .podium-stand { height: 70px; background: linear-gradient(180deg, rgba(245,200,66,0.15) 0%, rgba(245,200,66,0.05) 100%); border: 1px solid var(--border-gold); font-size: 22px; }
+    .podium-2 .podium-stand { height: 50px; background: rgba(154,160,168,0.08); border: 1px solid rgba(154,160,168,0.2); }
+    .podium-3 .podium-stand { height: 40px; background: rgba(205,127,50,0.08); border: 1px solid rgba(205,127,50,0.2); }
+
+    .leaderboard-list { display: flex; flex-direction: column; gap: 10px; }
+    .lb-row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); transition: border-color 0.2s; }
+    .lb-row.me { border-color: var(--border-gold); background: var(--gold-glow); }
+    .lb-rank { font-size: 13px; font-weight: 800; font-family: var(--font-mono); color: var(--text-3); min-width: 28px; text-align: center; }
+    .lb-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: var(--text-2); flex-shrink: 0; text-transform: uppercase; }
+    .lb-info { flex: 1; min-width: 0; }
+    .lb-name  { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lb-level { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .lb-coins { font-size: 14px; font-weight: 800; font-family: var(--font-mono); color: var(--gold); white-space: nowrap; }
+
+    .lb-loading { text-align: center; padding: 48px 20px; color: var(--text-3); }
+    .lb-loading-spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+    .lb-empty { text-align: center; padding: 48px 20px; color: var(--text-3); font-size: 14px; }
+
+    .my-rank-bar { display: flex; align-items: center; justify-content: space-between; background: var(--gold-dim); border: 1px solid var(--border-gold); border-radius: var(--r-md); padding: 12px 16px; margin-bottom: 16px; }
+    .my-rank-label { font-size: 12px; font-weight: 700; color: var(--gold); }
+    .my-rank-val   { font-size: 18px; font-weight: 800; font-family: var(--font-mono); color: var(--gold); }
+  </style>
+</head>
+<body>
+  <div id="toast-container"></div>
+  <div class="app-root">
+    <header class="top-bar">
+      <span class="top-bar__logo">Lyderiai</span>
+      <a href="profile.html" class="top-bar__action"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></a>
+    </header>
+    <main class="page-content">
+      <div id="lb-container">
+        <div class="lb-loading">
+          <div class="lb-loading-spinner"></div>
+          Kraunama lyderių lentelė…
+        </div>
+      </div>
+    </main>
+    <nav class="bottom-nav">
+      <a class="nav-item" data-page="app" href="app.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+      <a class="nav-item" data-page="empire" href="empire.html"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-4h6v4"/></svg>Imperija</a>
+      <a class="nav-item" data-page="market" href="market.html"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Rinka</a>
+      <a class="nav-item" data-page="academy" href="academy.html"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Akademija</a>
+      <a class="nav-item active" data-page="leaderboard" href="leaderboard.html"><svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>Top</a>
+    </nav>
+  </div>
+  <script type="module">
+    import { getUser, requireAuth, getLevelInfo, getBusinessByLevel } from './assets/js/user.js';
+    import { fmt } from './assets/js/ui.js';
+    import api from './assets/js/api.js';
+
+    requireAuth();
+    const me = getUser();
+
+    async function load() {
+      const res = await api.leaderboard();
+      const container = document.getElementById('lb-container');
+
+      if (!res || !res.success || !res.data || res.data.length === 0) {
+        // Fallback demo data
+        const demo = [
+          { username: me.username, coins: me.coins || 0, xp: me.xp || 0, level: 1 },
+        ];
+        render(demo);
+        return;
+      }
+
+      render(res.data);
+    }
+
+    function render(players) {
+      players.sort((a, b) => (b.coins || 0) - (a.coins || 0));
+      const container = document.getElementById('lb-container');
+      const myRank = players.findIndex(p => p.username === me.username) + 1;
+
+      let html = '';
+
+      if (myRank > 0) {
+        html += `<div class="my-rank-bar"><span class="my-rank-label">👑 Mano pozicija</span><span class="my-rank-val">#${myRank}</span></div>`;
+      }
+
+      // Podium top 3
+      const top3 = players.slice(0, 3);
+      const order = [top3[1], top3[0], top3[2]].filter(Boolean);
+      const podiumClass = ['podium-2', 'podium-1', 'podium-3'];
+      const medals = ['🥈', '🥇', '🥉'];
+      if (top3.length >= 2) {
+        html += `<div class="podium">`;
+        order.forEach((p, i) => {
+          const cls = podiumClass[i];
+          const medal = medals[i];
+          html += `<div class="podium-item ${cls}">
+            <div class="podium-avatar">${p.username[0]}</div>
+            <div class="podium-name">${p.username}</div>
+            <div class="podium-coins">€${fmt(p.coins || 0)}</div>
+            <div class="podium-stand">${medal}</div>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+
+      // Full list from #4
+      if (players.length > 3) {
+        html += `<p class="section-label mb-12">Visi žaidėjai</p><div class="leaderboard-list">`;
+        players.forEach((p, i) => {
+          const isMe = p.username === me.username;
+          const info = getLevelInfo(p.xp || 0);
+          html += `<div class="lb-row ${isMe ? 'me' : ''}">
+            <div class="lb-rank">#${i + 1}</div>
+            <div class="lb-avatar">${p.username[0]}</div>
+            <div class="lb-info">
+              <div class="lb-name">${p.username}${isMe ? ' 👈' : ''}</div>
+              <div class="lb-level">${info.business.emoji} ${info.business.name} · Lygis ${info.level}</div>
+            </div>
+            <div class="lb-coins">€${fmt(p.coins || 0)}</div>
+          </div>`;
+        });
+        html += `</div>`;
+      } else {
+        html += `<div class="leaderboard-list">`;
+        players.forEach((p, i) => {
+          if (i < 3) return;
+          const isMe = p.username === me.username;
+          const info = getLevelInfo(p.xp || 0);
+          html += `<div class="lb-row ${isMe ? 'me' : ''}">
+            <div class="lb-rank">#${i + 1}</div>
+            <div class="lb-avatar">${p.username[0]}</div>
+            <div class="lb-info">
+              <div class="lb-name">${p.username}${isMe ? ' 👈' : ''}</div>
+              <div class="lb-level">${info.business.emoji} ${info.business.name}</div>
+            </div>
+            <div class="lb-coins">€${fmt(p.coins || 0)}</div>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    load();
+  </script>
+</body>
+</html>

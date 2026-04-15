@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Dashboard — Econ Empire</title>
+  <link rel="stylesheet" href="assets/css/app.css"/>
+  <style>
+    .dash-greeting { font-size: 13px; font-weight: 600; color: var(--text-3); letter-spacing: 0.04em; margin-bottom: 4px; }
+    .dash-name     { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+    .dash-name span { color: var(--gold); }
+
+    /* ── MAIN STAT CARD ── */
+    .stat-hero {
+      background: linear-gradient(135deg, rgba(245,200,66,0.07) 0%, rgba(245,200,66,0.03) 100%);
+      border: 1px solid var(--border-gold);
+      border-radius: var(--r-xl);
+      padding: 24px 20px 20px;
+      margin-top: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-hero::before { content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: radial-gradient(circle, rgba(245,200,66,0.12) 0%, transparent 70%); pointer-events: none; }
+    .stat-hero-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+    .stat-hero-val   { font-size: 38px; font-weight: 800; font-family: var(--font-mono); color: var(--gold); letter-spacing: -0.02em; line-height: 1; }
+    .stat-hero-val sup { font-size: 16px; font-weight: 600; margin-right: 2px; }
+    .stat-hero-meta  { font-size: 12px; color: var(--text-3); margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+    .stat-hero-meta .up { color: var(--teal); font-weight: 700; }
+
+    /* ── STAT ROW ── */
+    .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .stat-mini { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 16px 16px 14px; }
+    .stat-mini-label { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+    .stat-mini-val   { font-size: 22px; font-weight: 800; font-family: var(--font-mono); letter-spacing: -0.01em; }
+    .stat-mini-sub   { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+    .stat-mini--xp   { border-color: rgba(123,79,255,0.2); }
+    .stat-mini--xp .stat-mini-val { color: var(--purple-2); }
+    .stat-mini--biz  { border-color: rgba(0,212,170,0.2); }
+    .stat-mini--biz .stat-mini-val { font-size: 16px; color: var(--teal); }
+
+    /* ── PROGRESS SECTION ── */
+    .progress-section { margin-top: 24px; }
+    .prog-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .prog-title  { font-size: 13px; font-weight: 700; }
+    .prog-pct    { font-size: 12px; font-weight: 700; font-family: var(--font-mono); color: var(--purple-2); }
+
+    /* ── INCOME CARD ── */
+    .income-card { display: flex; align-items: center; justify-content: space-between; background: var(--teal-dim); border: 1px solid rgba(0,212,170,0.2); border-radius: var(--r-lg); padding: 16px 18px; margin-top: 12px; }
+    .income-left  { display: flex; flex-direction: column; gap: 3px; }
+    .income-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(0,212,170,0.6); }
+    .income-val   { font-size: 20px; font-weight: 800; font-family: var(--font-mono); color: var(--teal); }
+    .income-pulse { width: 36px; height: 36px; background: rgba(0,212,170,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; animation: pulse-gold 2s infinite; }
+
+    /* ── QUICK ACTIONS ── */
+    .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .action-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; cursor: pointer; text-decoration: none; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; }
+    .action-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); }
+    .action-card:active { transform: scale(0.97); }
+    .action-card-icon { width: 44px; height: 44px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .action-card-title { font-size: 14px; font-weight: 800; }
+    .action-card-desc  { font-size: 11px; color: var(--text-3); line-height: 1.4; }
+    .action-card--empire  { border-color: var(--border-gold); }
+    .action-card--empire .action-card-icon  { background: var(--gold-dim); }
+    .action-card--empire:hover  { border-color: rgba(245,200,66,0.4); }
+    .action-card--market  { border-color: rgba(0,212,170,0.2); }
+    .action-card--market .action-card-icon  { background: var(--teal-dim); }
+    .action-card--market:hover  { border-color: rgba(0,212,170,0.4); }
+    .action-card--academy { border-color: rgba(123,79,255,0.2); }
+    .action-card--academy .action-card-icon { background: var(--purple-dim); }
+    .action-card--academy:hover { border-color: rgba(123,79,255,0.4); }
+    .action-card--top     { border-color: rgba(255,140,66,0.2); }
+    .action-card--top .action-card-icon     { background: var(--orange-dim); }
+    .action-card--top:hover     { border-color: rgba(255,140,66,0.4); }
+
+    /* ── DAILY REWARD ── */
+    .daily-card { background: linear-gradient(135deg, rgba(123,79,255,0.1) 0%, rgba(123,79,255,0.04) 100%); border: 1px solid rgba(123,79,255,0.22); border-radius: var(--r-lg); padding: 20px; margin-top: 12px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+    .daily-card:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(123,79,255,0.15); }
+    .daily-icon { font-size: 32px; flex-shrink: 0; }
+    .daily-text-title { font-size: 15px; font-weight: 800; margin-bottom: 3px; }
+    .daily-text-sub   { font-size: 12px; color: var(--text-3); }
+    .daily-badge { margin-left: auto; background: var(--purple); color: white; font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 100px; white-space: nowrap; }
+    .daily-badge.claimed { background: var(--surface-2); color: var(--text-3); }
+
+    /* ── EVENTS ── */
+    .events-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+    .event-item { display: flex; align-items: center; gap: 12px; padding: 13px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); }
+    .event-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .event-dot--gold { background: var(--gold); }
+    .event-dot--teal { background: var(--teal); }
+    .event-dot--purple { background: var(--purple-2); }
+    .event-text { font-size: 12px; color: var(--text-2); line-height: 1.4; flex: 1; }
+    .event-time { font-size: 10px; color: var(--text-3); font-family: var(--font-mono); white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <div id="toast-container"></div>
+  <div class="app-root">
+    <header class="top-bar">
+      <span class="top-bar__logo">Econ Empire</span>
+      <a href="profile.html" class="top-bar__action" id="profile-btn">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </a>
+    </header>
+    <main class="page-content" id="main">
+      <p class="dash-greeting">Sveiki atvykę atgal 👋</p>
+      <h2 class="dash-name" id="dash-name">Imperatoriau</h2>
+
+      <div class="stat-hero">
+        <div class="stat-hero-label">Kapitalas</div>
+        <div class="stat-hero-val"><sup>€</sup><span id="stat-coins">0</span></div>
+        <div class="stat-hero-meta">
+          <span class="up" id="stat-income-mini">+0/min</span>
+          <span>pasyvios pajamos</span>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-mini stat-mini--xp">
+          <div class="stat-mini-label">Žinios</div>
+          <div class="stat-mini-val" id="stat-xp">0</div>
+          <div class="stat-mini-sub">XP taškai</div>
+        </div>
+        <div class="stat-mini stat-mini--biz">
+          <div class="stat-mini-label">Verslo lygis</div>
+          <div class="stat-mini-val" id="stat-biz">–</div>
+          <div class="stat-mini-sub" id="stat-level">Lygis 1</div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="prog-header">
+          <span class="prog-title" id="prog-title">Progresas iki kito lygio</span>
+          <span class="prog-pct" id="prog-pct">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-bar__fill progress-bar__fill--gold" id="prog-bar" style="width:0%"></div></div>
+      </div>
+
+      <div class="income-card">
+        <div class="income-left">
+          <div class="income-label">Pasyvios pajamos</div>
+          <div class="income-val" id="income-val">€0 / min</div>
+        </div>
+        <div class="income-pulse">⚡</div>
+      </div>
+
+      <p class="section-label mt-20 mb-12">Greiti veiksmai</p>
+      <div class="actions-grid">
+        <a href="empire.html" class="action-card action-card--empire">
+          <div class="action-card-icon">🏢</div>
+          <div>
+            <div class="action-card-title">Imperija</div>
+            <div class="action-card-desc">Kurkite ir tobulinkite verslus</div>
+          </div>
+        </a>
+        <a href="market.html" class="action-card action-card--market">
+          <div class="action-card-icon">📈</div>
+          <div>
+            <div class="action-card-title">Rinka</div>
+            <div class="action-card-desc">Prekiaukite ir investuokite</div>
+          </div>
+        </a>
+        <a href="academy.html" class="action-card action-card--academy">
+          <div class="action-card-icon">🎓</div>
+          <div>
+            <div class="action-card-title">Akademija</div>
+            <div class="action-card-desc">Ugdykite ekonomikos žinias</div>
+          </div>
+        </a>
+        <a href="leaderboard.html" class="action-card action-card--top">
+          <div class="action-card-icon">🏆</div>
+          <div>
+            <div class="action-card-title">Lyderiai</div>
+            <div class="action-card-desc">Pasaulio reitingai</div>
+          </div>
+        </a>
+      </div>
+
+      <p class="section-label mt-20 mb-12">Dienos atlygis</p>
+      <div class="daily-card" id="daily-card">
+        <div class="daily-icon">🎁</div>
+        <div>
+          <div class="daily-text-title">Dienos atlygis</div>
+          <div class="daily-text-sub" id="daily-sub">Gaukite nemokamą kapitalą!</div>
+        </div>
+        <div class="daily-badge" id="daily-badge">Paimti</div>
+      </div>
+
+      <p class="section-label mt-20 mb-12">Įvykiai</p>
+      <div class="events-list" id="events-list">
+        <div class="event-item"><div class="event-dot event-dot--teal"></div><span class="event-text">Rinkos atidarymas — galimybė investuoti</span><span class="event-time">dabar</span></div>
+        <div class="event-item"><div class="event-dot event-dot--gold"></div><span class="event-text">Akademijoje nauji klausimai jūsų laukia</span><span class="event-time">+2 min</span></div>
+        <div class="event-item"><div class="event-dot event-dot--purple"></div><span class="event-text">Patikrinkite savo poziciją lyderių lentelėje</span><span class="event-time">+5 min</span></div>
+      </div>
+    </main>
+    <nav class="bottom-nav">
+      <a class="nav-item active" data-page="app" href="app.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+      <a class="nav-item" data-page="empire" href="empire.html"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-4h6v4"/></svg>Imperija</a>
+      <a class="nav-item" data-page="market" href="market.html"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Rinka</a>
+      <a class="nav-item" data-page="academy" href="academy.html"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Akademija</a>
+      <a class="nav-item" data-page="leaderboard" href="leaderboard.html"><svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>Top</a>
+    </nav>
+  </div>
+  <script type="module">
+    import { getUser, requireAuth, getLevelInfo, getPassiveIncome, saveUser } from './assets/js/user.js';
+    import { countUp, toast, fmt } from './assets/js/ui.js';
+    import api from './assets/js/api.js';
+
+    requireAuth();
+    const u = getUser();
+    const info = getLevelInfo(u.xp || 0);
+    const income = getPassiveIncome(u);
+
+    document.getElementById('dash-name').innerHTML = `Sveiki, <span>${u.username}</span>!`;
+    document.getElementById('stat-biz').textContent  = info.business.emoji + ' ' + info.business.name;
+    document.getElementById('stat-level').textContent = 'Lygis ' + info.level;
+    document.getElementById('income-val').textContent = '€' + fmt(income) + ' / min';
+    document.getElementById('stat-income-mini').textContent = '+€' + fmt(income) + '/min';
+    document.getElementById('prog-pct').textContent  = Math.round(info.progress * 100) + '%';
+    document.getElementById('prog-bar').style.width  = (info.progress * 100) + '%';
+    document.getElementById('prog-title').textContent = 'Iki: ' + (info.nextBiz ? info.nextBiz.name : 'MAX!');
+
+    // countUp stats
+    setTimeout(() => {
+      countUp(document.getElementById('stat-coins'), u.coins || 0, 900);
+      countUp(document.getElementById('stat-xp'),   u.xp    || 0, 800);
+    }, 100);
+
+    // Daily reward
+    const today = new Date().toDateString();
+    const lastClaim = localStorage.getItem('ee_daily');
+    const dailyCard  = document.getElementById('daily-card');
+    const dailyBadge = document.getElementById('daily-badge');
+    const dailySub   = document.getElementById('daily-sub');
+
+    if (lastClaim === today) {
+      dailyBadge.textContent = 'Paimta ✓';
+      dailyBadge.className = 'daily-badge claimed';
+      dailySub.textContent = 'Grįžkite rytoj!';
+    } else {
+      dailyCard.addEventListener('click', async () => {
+        if (localStorage.getItem('ee_daily') === today) return;
+        const reward = 100 + Math.floor(info.level * 50);
+        const newCoins = (u.coins || 0) + reward;
+        saveUser({ coins: newCoins });
+        await api.update(u.username, newCoins, u.xp || 0, info.level);
+        localStorage.setItem('ee_daily', today);
+        dailyBadge.textContent = 'Paimta ✓';
+        dailyBadge.className = 'daily-badge claimed';
+        dailySub.textContent = 'Grįžkite rytoj!';
+        toast(`+€${reward} dienos atlygis!`, 'success');
+        countUp(document.getElementById('stat-coins'), newCoins, 600);
+      });
+    }
+
+    // Passive income tick
+    let accIncome = 0;
+    setInterval(() => {
+      accIncome += income / 60;
+      if (accIncome >= 1) {
+        const add = Math.floor(accIncome);
+        accIncome -= add;
+        const current = getUser();
+        const newCoins = (current.coins || 0) + add;
+        saveUser({ coins: newCoins });
+        countUp(document.getElementById('stat-coins'), newCoins, 400);
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
